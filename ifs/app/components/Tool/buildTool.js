@@ -132,6 +132,22 @@ function insertOptions( toolList, toolOptions) {
     return toolList;
 }
 
+function insertOptionsForTool( tool, targetToolOptions )
+{
+    if( tool && targetToolOptions )
+    {
+        var cmd = tool.parseCmd || "basicParse";
+        var result = "";
+        try{
+            result = eval(cmd)(tool,targetToolOptions);
+        }
+        catch(err){
+            Logger.error("Failed to parse form options  with function ", cmd );
+        }
+    }
+    return tool;
+}
+
 /**
  * Takes form data and the tool list and remove tool information for disabled tools.
  */
@@ -269,3 +285,9 @@ function writeToolList( files, obj )
 
 // Exports below
 module.exports.createJobRequests = createJobRequests;
+
+// Exports for Testing
+module.exports.insertOptions = insertOptions;
+module.exports.buildJobs = buildJobs;
+module.exports.readToolFileList = readToolFileList;
+module.exports.insertOptionsForTool = insertOptionsForTool;

@@ -1,0 +1,1 @@
+{"data": {"errors": [{"check": "after_the_deadline.redundancy", "column": 14, "end": 31, "extent": 17, "line": 1, "message": "Redundancy. Use 'fact' instead of 'established fact'.", "replacements": "fact", "severity": "warning", "start": 14}]}, "status": "success"}

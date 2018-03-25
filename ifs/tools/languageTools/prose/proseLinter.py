@@ -28,6 +28,7 @@ from subprocess import call
 from subprocess import Popen, PIPE
 import shlex
 import glob
+import time
 
 ##
 # Example output
@@ -119,8 +120,8 @@ def main(argv):
     ifile = ''
     options = { 'tool': 'proselint',
                 'ifs': True,
-                'outFile':'stdout.txt',
-                'outErrFile':'stderr.txt',
+                'outFile':'stdout',
+                'outErrFile':'stderr',
                 'arg': '-j'
               }
 
@@ -147,13 +148,13 @@ def main(argv):
 
         if( cmd ):
             try:
-                outFile = os.path.normpath( os.path.join( os.path.dirname(ifile), options['outFile']) )
-                outErrFile = os.path.normpath( os.path.join( os.path.dirname(ifile), options['outErrFile']) )
+                millis = int(round(time.time() * 1000))
+                outFile = os.path.normpath( os.path.join( os.path.dirname(ifile), options['outFile']) + "_" + str(millis) + ".txt"  )
+                outErrFile = os.path.normpath( os.path.join( os.path.dirname(ifile), options['outErrFile']) + "_" + str(millis) + ".txt" )
                 code, out, err = getProcessInfo( cmd, outFile, outErrFile )
 
                 with open(outFile, 'r', encoding='utf-8') as outFile:
                     result = outFile.read()
-
                     if( result and options['ifs'] ):
                         result = decorateData( result, options )
                     print( result )

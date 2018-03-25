@@ -1,0 +1,1 @@
+{"data": {"errors": [{"check": "typography.symbols.sentence_spacing", "column": 35, "end": 95, "extent": 3, "line": 2, "message": "More than two spaces after the period; use 1 or 2.", "replacements": null, "severity": "warning", "start": 92}]}, "status": "success"}

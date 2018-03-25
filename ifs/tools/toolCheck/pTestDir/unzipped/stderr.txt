@@ -1,0 +1,9 @@
+pTestDir/unzipped/src/errorFile.c:3:11: warning: incompatible implicit declaration of built-in function ‘malloc’
+pTestDir/unzipped/src/errorFile.c:3:11: note: include ‘<stdlib.h>’ or provide a declaration of ‘malloc’
+pTestDir/unzipped/src/errorFile.c:3:18: error: expected expression before ‘int’
+pTestDir/unzipped/src/errorFile.c:7:1: warning: data definition has no type or storage class
+pTestDir/unzipped/src/errorFile.c:7:9: error: invalid initializer
+pTestDir/unzipped/src/errorFile.c:9:1: error: expected identifier or ‘(’ before ‘return’
+pTestDir/unzipped/src/array.c: In function ‘printArray’:
+pTestDir/unzipped/src/array.c:67:2: error: ‘for’ loop initial declarations are only allowed in C99 or C11 mode
+pTestDir/unzipped/src/array.c:67:2: note: use option -std=c99, -std=gnu99, -std=c11 or -std=gnu11 to compile your code

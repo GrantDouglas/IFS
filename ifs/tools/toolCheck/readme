@@ -1,0 +1,7 @@
+This program tests all of the tools with all files in a specified location.
+
+Pass in either a directory or file and it will be tested with all the tool options.
+
+It only determines if an crash/error will occur with the tool. 
+
+Not whether it's correct.

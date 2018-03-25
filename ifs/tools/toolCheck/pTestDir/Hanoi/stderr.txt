@@ -1,0 +1,2 @@
+gcc: warning: pTestDir/Hanoi/stderr.txt: linker input file unused because linking not done
+gcc: warning: pTestDir/Hanoi/stdout.txt: linker input file unused because linking not done
