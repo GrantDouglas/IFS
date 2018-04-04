@@ -8,7 +8,7 @@
     "test": "nodemon --inspect --config ./config/nodemon.json ./config/index.js",
     "prestart": "node ./config/createDatabase.js",
     "start": "pm2 start ./config/index.js -i 0 --name IFS",
-    "restart": "pm2 start -f ./config/index.js -i -0 --name IFS",
+    "restart": "pm2 start -f ./config/index.js -i 0 --name IFS",
     "stop": "pm2 stop IFS"
   },
   "repository": {
@@ -96,7 +96,6 @@
     "retext-simplify": "^4.1.1",
     "retext-spell": "^2.3.1",
     "retext-usage": "^0.5.0",
-    "siege": "^0.2.0",
     "socket.io": "^1.7.3",
     "survey-jquery": "^0.12.5",
     "tokgen": "^1.0.0",
@@ -114,6 +113,7 @@
     "chai": "^3.5.0",
     "chai-http": "^3.0.0",
     "mocha": "^3.2.0",
-    "nodemon": "^1.11.0"
+    "nodemon": "^1.11.0",
+    "siege": "^0.2.0"
   }
 }
