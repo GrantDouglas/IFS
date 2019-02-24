@@ -63,6 +63,13 @@
     border-radius: 3px !important;
 }
 
+.formatting {
+    display: inline-block;
+    background-color: #ebb987 !important;
+    font-style: italic !important;
+    border-radius: 3px !important;
+}
+
 /* mark up for popover cards */
 .spelling-display, .error-display {
     display: inline-block;
@@ -99,4 +106,12 @@
     display: inline-block;
     color: orange !important;
     font-style: italic !important;
+}
+
+.contractions, .diacritics, .equality, .indefinite-article, .keywords, .overuse, .passive, .profanities, .readability, .redundant-acronyms, .repeated-words, .sentence-spacing, .sentiment, .simplify {
+    display: inline-block;
+    font-weight: 800 !important;
+    color: #1e87f0 !important;
+    text-decoration: none !important;
+    border-radius: 3px !important;
 }

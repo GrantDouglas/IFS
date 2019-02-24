@@ -32,10 +32,8 @@ module.exports = function (app, iosocket) {
     require(componentsPath + '/TipManager/tipRoutes')(app);
 
     // Survey page routes
-    require(componentsPath + '/Survey/surveyRoutes')(app,iosocket);
+    require(componentsPath + '/Survey/routes')(app,iosocket);
 
-    // Testing Routes, leave commented out in commits
-    require(componentsPath + '/Survey/surveyBuildRoutes')(app);
 
     // Feedback pages routes
     require(componentsPath + '/Feedback/feedbackRoutes')(app, iosocket);
@@ -69,4 +67,12 @@ module.exports = function (app, iosocket) {
 
     // Test features can be placed here.
     require(componentsPath + "/Test/testRoutes")(app);
+
+    // Survey Stats/Admin panel
+    require(componentsPath + '/SurveyAdmin/routes')(app,iosocket);
+    // Announcement Routes 
+    require (componentsPath + '/Announcements/routes')(app,iosocket);
+
+    // Instructor route
+    require(componentsPath + "/Instructor/instructorRoutes")(app);
 }

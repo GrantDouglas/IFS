@@ -15,7 +15,7 @@ module.exports = function (app) {
     app.use(express.static(path.join( __dirname, "/../app/")));
 
     // IFS version
-    app.use("/version.js", express.static(path.join(__dirname, "/../config/version.js")));
+    //app.use("/version.js", express.static(path.join(__dirname, "/../config/version.js")));
 
     // Survey JS information
     app.use("/surveyjs",express.static(nodeModulesPath + "/survey-jquery/"));
@@ -60,4 +60,12 @@ module.exports = function (app) {
 
     // Angular-Chart
     app.use( "/achartjs", express.static(nodeModulesPath + "/angular-chart.js/dist/"));
+
+    // Announcement controllers
+    app.use('/announce', express.static(path.join(__dirname, '../app/components/Announcements/views/scripts')));
+
+    // summernote WYSIWYG editor
+    app.use('/snote', express.static(nodeModulesPath + '/angular-summernote/dist/'));
+
+    app.use('/surveyscripts', express.static(path.join(__dirname, '../app/components/SurveyAdmin/views/scripts')));
 }

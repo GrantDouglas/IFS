@@ -47,7 +47,7 @@ module.exports = {
     },
 
     isSrcExt: function(filename) {
-        var ext = ["c", "cpp", "cc", "cxx", "h", "hpp"];
+        var ext = ["c", "cpp", "cc", "cxx", "h", "hpp", "py"];
         return _.includes(ext, this.getExt(filename));
     },
 
@@ -83,6 +83,8 @@ module.exports = {
             options = options || {
                 'dir': '/unzipped'
             };
+
+            
             var directory = filesInfo[0].destination;
             var zipDir = path.join(directory, options['dir']);
             var folderCreated = mkdirp.sync(zipDir);
@@ -398,7 +400,10 @@ module.exports = {
         var uploadDir = path.dirname(options.filepath);
         var file = path.join(uploadDir, filename);
         Logger.info("Writing", file, "now", file);
-        fs.writeFileSync(file, JSON.stringify(obj), 'utf-8');
+        fs.writeFile(file, JSON.stringify(obj), 'utf-8', (err) => {
+            if(err)
+                Logger.error("Unable to write file " + file + " reason: " + err );
+        });
         return file;
     },
 

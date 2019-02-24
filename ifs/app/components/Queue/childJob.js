@@ -1,14 +1,18 @@
-var queue = require('./kueServer').queue;
+var queue = require('./kueServer');
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var job = require('./generalJob');
 var Q = require('q');
+var cluster = require('cluster');
 
 var path = require('path');
 var fs = require('fs');
 var _ = require('lodash');
 
 const jobType = 'cJob';
+const JobConCurrent = 10;
+
+var clusterSize = require('os').cpus().length;
 
 /* Tool Options
     Should present a number of values in the obj, should be validated in some way.
@@ -16,7 +20,7 @@ const jobType = 'cJob';
     progName -> callable from command line
     arguments -> an array of arguments or whatever the program expects.
 */
-function makeJob( toolOptions ) {
+function makeJob(toolOptions) {
     var jobOpts = job.getDefaults(jobType,toolOptions.displayName );
     return job.buildJob( toolOptions, jobOpts );
 }
@@ -28,7 +32,7 @@ function makeJob( toolOptions ) {
  * @param  {Function} done [description]
  * @return {[type]}        [description]
  */
-function runSingleTool( job, done )
+function runSingleTool(job, done)
 {
     // Fake progress to demonstrate some progress
     job.progress(10, 100);
@@ -45,34 +49,29 @@ function runSingleTool( job, done )
     var uploadDir = path.dirname( uploadFilename );
     var filepath =  path.join(uploadDir, "feedback" + "_" + easyToolName + "_" + path.basename(uploadFilename));
 
-    //Create write stream to pipe results as they arrive into a file.
-    const ws = fs.createWriteStream( filepath );
-
     // Spawn a child to handle process
     child = spawn(splitCMD[0], splitCMD.slice(1));
 
-    var error = false;
+    console.log("splitcmd: " + splitCMD[0] + " " + splitCMD.slice(1));
 
-    // Setup the pipe, this is similar to stderr Event except its shorthand format.
-    child.stdout.pipe(ws);
+    var error = false;
 
     // Event to handle stderr
     child.stderr.on('data', function(data) {
         if(data) {
             error = true;
             job.emit('failed');
-            done({"code":-1, "response":new Error(data)});
             return;
         }
     });
 
     // Event on close to indicate progress has finished and close the stream.
     child.on('close', function(code) {
-        
-        job.progress(100,100);
-        ws.end();
+        job.progress(100, 100);
+
         if(error) {
-            done({"code":-1, "response":new Error("Failed to execute assessment tool: ", job.data.name)});
+            var err = {"code":-1, "response":new Error("Failed to execute assessment tool: " + job.data.name)};
+            done(JSON.stringify(err));
             job.emit('failed');
         }
         else {
@@ -84,7 +83,7 @@ function runSingleTool( job, done )
 
 function runChildJob(){
 
-    queue.process(jobType, function(job,done) {
+    queue.getQueue().process(jobType, JobConCurrent, function(job,done) {
         runSingleTool( job, done );
     });
 }

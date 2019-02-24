@@ -58,7 +58,7 @@ module.exports = {
     },
 
     deleteIFSTips: function(callback) {
-        var q =  dbHelpers.buildDelete(dbcfg.ifs_tips_table); 
+        var q =  dbHelpers.buildDelete(dbcfg.ifs_tips_table);
         db.query(q,[],callback);
     },
 
@@ -66,7 +66,7 @@ module.exports = {
         var q = "ALTER TABLE " + dbcfg.ifs_tips_table + " AUTO_INCREMENT = 1";
         db.query(q,[],callback);
     },
-   
+
 
 /**
  * [selectTip description]
@@ -84,17 +84,18 @@ module.exports = {
         // Start by checking if tip should randomly be shown.
         /// Check Database if tips are allowed.
         preferencesDB.getStudentPreferencesByToolType(userId, "Option", function(err, preferences) {
-            var tipIndex = -1;
+            var tipIndex = 0;
             var tipAllowed = false;
-            var showTip =  !err && module.exports.getRandomlyShowTip() && preferences != null;
+            var showTip =   !err && module.exports.getRandomlyShowTip() && preferences != null;
             if(preferences) {
                 try {
                     var tipIndexObject =  _.find(preferences, ['toolName','pref-tipsIndex']);
                     var tipAllowedObject =  _.find(preferences, ['toolName','pref-tipsAllowed']);
 
                     if(tipAllowedObject) {
-                        if(tipIndexObject)
-                            tipIndex = parseInt( _.get(tipIndexObject,'toolValue', "0") );
+                        if(tipIndexObject) {
+                            tipIndex = parseInt( _.get(tipIndexObject,'toolValue', "0") ) || 1 ;
+                        }
 
                         tipAllowed = _.get(tipAllowedObject,'toolValue',"on") == "on";
                         showTip &= tipAllowed;
@@ -111,26 +112,25 @@ module.exports = {
             }
             else {
                 module.exports.getIFSTips(tipIndex, function(err, tip){
+                    if( err  || !tip) {
+                        callback();
+                        return;
+                    }
                     module.exports.getTipCount( function(err,tipCount) {
                         try {
-                            var tipC = parseInt( _.get(tipCount[0],"tips", "1") );
-                            tipIndex = (tipIndex %tipC) + 1;
+                            var tipC = parseInt( _.get(tipCount[0],"tips", "1") ) || 1;
 
-                            if(!tip) {
-                                // IN case we failed to get tip default back to first tip.
-                                tipIndex = 1;
-                            }
+                            if( tipC > 1 )
+                                tipIndex = (tipIndex %tipC) + 1;
 
                             preferencesDB.setStudentPreferences(userId,"Option", "pref-tipsIndex", "" + tipIndex, function(err, wasSet){
-                                var title = tip[0].name;
-                                var desc =  tip[0].description;
-                                // Increment the preference index
-                                res.render( viewPath + "tool",
-                                    {  "title": req.session.toolSelect + ' Tools',
-                                       "surveyQuestions":[],
-                                       "tip": { "title": title, "desc": desc }
-                                    }
-                                );
+                                if( tip.length > 0 ) {
+                                    var title = tip[0].name;
+                                    var desc =  tip[0].description;
+                                    callback({ "title": title, "desc": desc } );
+                                }
+                                else
+                                    callback();
                             });
                         }
                         catch(e) {

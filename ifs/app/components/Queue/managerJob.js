@@ -1,14 +1,18 @@
 var Q = require('q');
 
-var queue = require('./kueServer').queue;
+var queue = require('./kueServer');
 var cjob = require('./childJob');
 var job = require('./generalJob');
 var path = require('path');
 var Logger = require( __configs  + "loggingConfig");
+var now = require("performance-now");
 var _ = require('lodash');
+var cluster = require('cluster')
+var spawn = require('child_process').spawn;
 
 // This is just a regular reference, it needed a name for managerJob.
 const jobType = 'mJob';
+const JobConCurrent = 10;
 
 /* This function creates a 'ManagerJob', which is a job that starts a bunch of other tools in a queue and waits for feedback.
    This version of the file provides options for the job.
@@ -23,21 +27,75 @@ function makeManagerJob(toolOptions) {
    and waits for the feedback.
 */
 
+function cTest(jobList)
+{
+    // console.log(jobList);
+
+    var argStr = "";
+    var cmdArr = [];
+
+    for (var i = 0; i < jobList.length; i++)
+    {
+        argStr = "\"" + jobList[i].runCmd + "\"";
+        cmdArr.push(argStr);
+
+    }
+
+
+    var child = spawn("./test", cmdArr);
+
+    child.stdout.on('data', function(data) {
+        console.log('stdout: ' + data);
+        //Here is where the output goes
+    });
+
+    child.stderr.on('data', function(data) {
+        console.log('stderr: ' + data);
+        //Here is where the error output goes
+    });
+
+    child.on('close', function(code) {
+        console.log('closing code: ' + code);
+        //Here you can get the exit code of the script
+    });
+
+
+
+}
+
 function loadAllTools(job, done) {
     job.emit('start');
 
+
+    var t0 = now();
+    var t1 = now();
+
     var promises = [];
     var jobsInfo = job.data.tool;
+
+
+    //creates a promise for each job to be executed
     for(var i = 0;i < jobsInfo.length;i++) {
         promises.push( cjob.makeJob( jobsInfo[i] ));
     }
 
+    // this was to test efficiency of running the tools with C
+    // cTest(jobsInfo);
+
     cjob.runJob();
 
     var count = 0;
+
+    var p = Q.all(promises);
+
     // Wait for everything to finish before emitting that parent is done.
     Q.allSettled(promises)
     .then(function(res) {
+        t1 = now();
+
+        // printing time it takes to run the tools
+        console.log("time taken to run jobs is: " + (t1 - t0) + " milliseconds");
+
         // return everything that passed and was fulfilled
         var passed =[], failed = [];
 
@@ -64,7 +122,6 @@ function loadAllTools(job, done) {
                 failed.push(res[i].reason.job);
             }
         }
-
         var Err = passed.length == 0 ? new Error('No jobs successfully completed.') : null;
         done(Err, { 'passed': passed, 'failed': failed });
 
@@ -73,7 +130,7 @@ function loadAllTools(job, done) {
     function(reason) {
         // This doesn't occurr because we don't reject child nodes.
         Logger.info("Reason: Error promise all parent.", reason);
-        done( new Error("Unable to complete any jobs"), null );
+        done( new Error("Unable to complete any jobs") );
     },
 
     function(notice) {
@@ -91,13 +148,15 @@ function loadAllTools(job, done) {
             Logger.info("Received:", notice );
         }
     });
+
+
 }
 
 /* This function is mostly to simplify the calling interface
    This will start running any created jobs (ie jobs that have been saved )
 */
 function runManagerJob() {
-    queue.process(jobType, function(job,done) {
+    queue.getQueue().process(jobType, JobConCurrent , function(job,done) {
         loadAllTools( job, done );
     });
 }

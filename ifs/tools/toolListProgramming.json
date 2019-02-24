@@ -4,17 +4,17 @@
             "displayName": "GCC Diagnostics",
             "description": "Identifies errors and warnings from the GNU Compiler Collection.",
             "technicalDesc": "A Python script that checks C/C++ compilation with the GNU Compiler Collection",
-            "author": "Jamey Fraser",
+            "author": "IFS Development Team",
             "copyright": "Copyright © 2017",
             "license": "ISC License",
             "licenseFile": "./tools/programmingTools/c_tools/LICENSE.txt",
-            "progName": "./tools/programmingTools/c_tools/programmingParser.py",
+            "progName": "./tools/programmingTools/c_tools/gccParser.py",
             "cmdToolName": "gcc",
             "runType": "programming",
             "route": "",
             "filesAllowed": "zipFile",
             "parseCmd": "",
-            "defaultArg": "-t gcc",
+            "defaultArg": "",
             "fileArgs": "-d",
             "options":  [
                 {
@@ -71,17 +71,17 @@
             "displayName": "Clang Diagnostics",
             "description": "Identifies errors and warnings from the Clang C compiler. These errors and warnings are often more readable than those from GCC.",
             "technicalDesc": "A Python script that checks C/C++ compilation with the Clang compiler.",
-            "author": "Jamey Fraser",
+            "author": "IFS Development Team",
             "copyright": "Copyright © 2017",
             "license": "ISC License",
             "licenseFile": "./tools/programmingTools/c_tools/LICENSE.txt",
-            "progName": "./tools/programmingTools/c_tools/programmingParser.py",
+            "progName": "./tools/programmingTools/c_tools/clangParser.py",
             "cmdToolName": "clang",
             "runType": "programming",
             "route": "",
             "filesAllowed": "zipFile",
             "parseCmd": "",
-            "defaultArg": "-t clang",
+            "defaultArg": "",
             "fileArgs": "-d",
             "options":  [
                 {
@@ -138,17 +138,17 @@
             "displayName": "Code Quality Checker",
             "description": "Identifies potential problems with C code, beyond what the compiler is able to identify.",
             "technicalDesc": "A Python script that checks C/C++ code for errors using Cppcheck.",
-            "author": "Jamey Fraser",
+            "author": "IFS Development Team",
             "copyright": "Copyright © 2017",
             "license": "ISC License",
             "licenseFile": "./tools/programmingTools/c_tools/LICENSE.txt",
-            "progName": "./tools/programmingTools/c_tools/programmingParser.py",
+            "progName": "./tools/programmingTools/c_tools/cppcheckParser.py",
             "cmdToolName": "cppCheck",
             "runType": "programming",
             "route": "",
             "filesAllowed": "zipFile",
             "parseCmd": "",
-            "defaultArg": "-t cppcheck",
+            "defaultArg": "",
             "fileArgs": "-d",
             "options":  [
                 {
@@ -191,6 +191,97 @@
                     "arg": "-f --suppress=unusedFunction",
                     "params": ""
                 }
+            ]
+        },
+        {
+           "displayName": "CIS*2750 A1 Compliance Checker",
+           "description": "Checks a submission for compliance with some of the mandatory rules for CIS*2750 A1. Only a guide, make sure to read the outline thoroughly before your final submission!",
+           "technicalDesc": "A Python suite that checks for various compliance issues in a submission of student's code agains the CIS*2750 F18 A1 rubric.",
+           "author": "IFS Development Team",
+           "copyright": "Copyright © 2018",
+           "license": "ISC License",
+           "licenseFile": "./tools/programmingTools/c_tools/LICENSE.txt",
+           "progName": "./tools/programmingTools/MeasureCollector/ifsmanager.py",
+           "cmdToolName": "Compliance",
+           "runType": "programming",
+           "route": "",
+           "filesAllowed": "zipFile",
+           "parseCmd": "",
+           "defaultArg": "",
+           "fileArgs": "-d",
+           "options":  [
+
+           ]
+       },
+	   {
+            "displayName": "Statistics",
+            "description": "Identifies certain characteristics about a piece of code and gathers statistics.",
+            "technicalDesc": "A Python script that checks C/C++ code for gathering statistics",
+            "author": "IFS Development Team",
+            "copyright": "Copyright © 2018",
+            "license": "ISC License",
+            "licenseFile": "./tools/programmingTools/c_stats/LICENSE.txt",
+            "progName": "./tools/programmingTools/c_stats/stats.py",
+            "cmdToolName": "stats",
+            "runType": "programming",
+            "route": "",
+            "filesAllowed": "zipFile",
+            "parseCmd": "",
+            "defaultArg": "",
+            "fileArgs": "-d",
+            "options":  [
+                {
+                    "displayName": "Count total number of lines",
+                    "type": "checkbox",
+                    "name": "opt-countTotalLines",
+                    "values": "",
+                    "arg": "-t totalLines",
+                    "params": ""
+                },
+                {
+                    "displayName": "Count total number of comments",
+                    "type": "checkbox",
+                    "name": "opt-countTotalComments",
+                    "values": "",
+                    "arg": "-c totalComments",
+                    "params": ""
+                }
+            ]
+        },
+        {
+            "displayName": "Python Formatting",
+            "description": "Finds errors in python files",
+            "technicalDesc": "A Python script that checks with a python linter",
+            "author": "IFS Development Team",
+            "copyright": "Copyright © 2018",
+            "license": "ISC License",
+            "licenseFile": "./tools/programmingTools/python_tools/LICENSE.txt",
+            "progName": "./tools/programmingTools/python_tools/pythonParser.py",
+            "cmdToolName": "pycodestyle",
+            "runType": "programming",
+            "route": "",
+            "filesAllowed": "zipFile",
+            "parseCmd": "",
+            "defaultArg": "-t pycodestyle",
+            "fileArgs": "-d",
+            "options":  [
+                {
+                    "displayName": "Language standard (python3, python2)",
+                    "type": "select",
+                    "name": "opt-pythonStandard",
+                    "values": [ "python3"],
+                    "arg": "-s",
+                    "params": ""
+                },
+                {
+                    "displayName": "Number of formatting errors",
+                    "type": "checkbox",
+                    "name": "opt-pycodestyleErrCount",
+                    "values": "",
+                    "arg": "",
+                    "params": ""
+                }
+
             ]
         }
     ]

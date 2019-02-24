@@ -5,6 +5,7 @@ var _ = require('lodash');
 var path = require('path');
 var async = require('async');
 var fs = require('fs');
+var fse = require('fs-extra');
 
 // Managers
 var manager = require( __components + 'Queue/managerJob');
@@ -16,7 +17,7 @@ var Helpers = require("./fileUploadHelpers");
 var upload = require("./fileUploadConfig").upload;
 
 // Feedback
-var FeedbackFilterSystem = require(__components + 'FeedbackFiltering/feedbackFilterSystem');
+//var FeedbackFilterSystem = require(__components + 'FeedbackFiltering/feedbackFilterSystem');
 
 var dbcfg = require(__configs + 'databaseConfig');
 var db = require( __configs + 'database');
@@ -28,6 +29,9 @@ var submissionEvent = require(__components + "InteractionEvents/submissionEvents
 var tracker = require(__components + "InteractionEvents/trackEvents.js" );
 
 var preferencesDB = require( __components + 'Preferences/preferenceDB.js');
+
+var {Feedback} = require("../../models/feedback");
+var {Assignment} = require("../../models/assignment");
 
 module.exports = function (app, iosocket) {
 
@@ -69,9 +73,10 @@ module.exports = function (app, iosocket) {
      * @param  {Function} callback        [description]
      * @return {[type]}                   [description]
      */
-    function writeFeedbackFile( sessionId, userId, submissionId, feedbackFileObj, callback ) {
+    function writeFeedbackFile( sessionId, userId, submissionId, feedbackFileObj, assignmentID, callback ) {
         fs.readFile( feedbackFileObj.file, function(err,data){
             if(data) {
+
                 var feedbackItemData = JSON.parse(data);
                 var feedbackItems = feedbackItemData['feedback'];
                 var feedbackStatsItems = feedbackItemData['feedbackStats'];
@@ -83,7 +88,8 @@ module.exports = function (app, iosocket) {
                     var toolAdd = {"displayName": feedbackFileObj.displayName, "runType": feedbackFileObj.runType };
                     _.extend(fi,toolAdd);
 
-                    var fe =  eventDB.makeFeedbackEvent( sessionId, userId, submissionId, fi );
+                    var fe =  eventDB.makeFeedbackEvent( sessionId, userId, submissionId, fi , assignmentID);
+
                     dbHelpers.insertEventC( dbcfg.feedback_table, fe, function(err,d){
                         // Empty Callback if feedback fails to save, we aren't too concerned.
                         _callback();
@@ -99,7 +105,7 @@ module.exports = function (app, iosocket) {
                 });
             }
             else
-                callback("Failed to read file");
+                callback("Failed to read feedback file:" + feedbackFileObj.file );
         });
     }
 
@@ -132,7 +138,7 @@ module.exports = function (app, iosocket) {
                 });
             }
             else
-                callback("Failed to read file");
+                callback("Failed to read stats file:" + feedbackFileObj.file );
         });
     }
 
@@ -144,10 +150,10 @@ module.exports = function (app, iosocket) {
      * @param  {[type]} feedbackItems [description]
      * @return {[type]}               [description]
      */
-    function emitFeedbackResults( sessionId, userId, submissionId, feedbackItemFiles ){
+    function emitFeedbackResults( sessionId, userId, submissionId, feedbackItemFiles, assignmentID ){
 
         async.each(feedbackItemFiles, function( feedbackFile, callback) {
-            writeFeedbackFile(sessionId, userId, submissionId,feedbackFile, callback );
+            writeFeedbackFile(sessionId, userId, submissionId,feedbackFile, assignmentID, callback );
         }, function(err) {
             if(err)
                 Logger.error(err);
@@ -177,8 +183,8 @@ module.exports = function (app, iosocket) {
         });
 
         preferencesDB.clearStudentFormPreferences(userId,toolType, function( err, clearResult ) {
-            // Whether clearing successeds or failes, change preferences that where selected.
-            async.eachOf(preferences, function( value,key, callback ) {
+
+            async.eachOfSeries(preferences, function( value,key, callback ) {
                 preferencesDB.setStudentPreferences(userId, toolType,  key, value, callback);
             }, function(err){
                 if(err)
@@ -189,25 +195,93 @@ module.exports = function (app, iosocket) {
         });
     }
 
-    app.post('/tool_upload', upload.any(), function(req,res,next) {
+    function saveUploadErrorFiles( userId, submissionId, fileDir, callback ) {
+        var dest = "./users/failedUploads/"
+        var submissionFolder = path.join( dest,userId.toString(), submissionId.toString() );
 
+        fse.ensureDir(submissionFolder, function(err) {
+            if(err) {
+                Logger.error("Unable to save uploaded files for submission error.");
+            }
+            else {
+                Logger.info("Upload Error Folder Structure for ", submissionFolder, " has been created");
+                fse.copy( fileDir, submissionFolder, err => {
+                    Logger.error('Failed to upload files. Saving uploaded files failed');
+                });
+            }
+        });
+    }
+
+    app.post('/assignment', async function(req, res) {
+        var temp = req.body.course;
+        var fin = 0;
+
+        if(temp == "None" || temp == "")
+        {
+            res.send({'assignment': fin});
+        }
+        else
+        {
+            //find assignment with name in assignment table
+            var assignment = await Assignment.query()
+            .where("name", "=", temp)
+            .catch(function(err) {
+                res.send({
+                    'value': assignment
+                });
+                console.log(err.stack);
+                return;
+            });
+
+            //get the assignment id
+            fin = assignment[0].id;
+
+            res.send({'assignment': fin});
+        }
+
+    });
+
+    app.post('/tool_upload', upload.any(), function(req,res,next) {
+        var assignmentID = req.body.assignId;
+
+        // saves the tools that were selected
         var user = eventDB.eventID(req);
         saveToolSelectionPreferences(req.user.id, req.session.toolSelect, req.body);
+
         submissionEvent.addSubmission( user, function(subErr, succSubmission) {
+
+            //obtain last submission from the requesting user
             var submissionRequest = submissionEvent.getLastSubmissionId(user.userId, user.sessoinId);
+
             db.query(submissionRequest.request,submissionRequest.data, function(err,submissionIdRes){
+
+                // get submission ID
                 var submissionId = event.returnData( submissionIdRes[0] );
+
+
+                //submit all tools and options to user_interactions database
                 emitJobOptions( req, iosocket, req.body);
+
+                //deal with uploaded files
                 var uploadedFiles = Helpers.handleFileTypes( req, res );
 
                 if( Errors.hasErr(uploadedFiles) ) {
                     var err = Errors.getErrMsg(uploadedFiles);
                     tracker.trackEvent( iosocket, eventDB.submissionEvent(user.sessionId, user.userId,"failed", err) ) ;
+
+                    if( req.files && uploadedFiles && uploadedFiles.length > 0 )
+                    {
+                        saveUploadErrorFiles( req.user.id, user.sessionId, uploadedFiles[0].destination, function(d,e) {
+                            Logger.log("Saving failed upload files for user:", req.user.id);
+                        });
+                    }
                     //req.flash('errorMessage', err );
-                    res.status(500).send(JSON.stringify({"msg":err}));
+                    res.status(500).send(JSON.stringify({"msg":"fails at uploadFiles"}));
                     return;
                 }
 
+
+                //get the tool selection and add target files
                 var userSelection = req.body;
                 userSelection['files'] = uploadedFiles;
 
@@ -216,6 +290,9 @@ module.exports = function (app, iosocket) {
                 if(!tools || tools.length == 0)
                 {
                     var err = Errors.cErr();
+                    saveUploadErrorFiles( req.user.id, user.sessionId, uploadedFiles[0].destination, function(d,e) {
+                        Logger.log("Saving failed job request files for user:", req.user.id);
+                    });
                     tracker.trackEvent( iosocket, eventDB.submissionEvent(user.sessionId, user.userId, "failed", err) );
                     res.status(500).send(JSON.stringify({"msg":"Please select a tool to evaluate your work."}));
                     return;
@@ -227,21 +304,22 @@ module.exports = function (app, iosocket) {
                 req.session.jobRequestFile = requestFile;
                 req.session.uploadFilesFile = filesFile;
 
+                //store tool used and command run into user_interaction table
                 emitJobRequests(req,iosocket,tools);
 
                 res.writeHead(202, { 'Content-Type': 'application/json' });
 
+
                 // Add the jobs to the queue, results are return in object passed:[], failed:[]
                 manager.makeJob(tools).then( function( jobResults ) {
                     tracker.trackEvent( iosocket, eventDB.submissionEvent(user.sessionId, user.userId, "success", {}) );
-                    emitFeedbackResults(user.sessionId, user.userId, submissionId, jobResults.result.passed);
+                    emitFeedbackResults(user.sessionId, user.userId, submissionId, jobResults.result.passed, assignmentID);
                     var data = { "msg":"Awesome"};
                     res.write(JSON.stringify(data));
                     res.end();
 
                 }, function(err){
                     Logger.error("Failed to make jobs:", err );
-
                     // NOTE: Abusing XHR communication because I can't get the below code to communicate.
                     // Want to just sent error to XHR but nothing gets communicated. So added 'err':true
                     // res.status(500).send(data)
@@ -255,13 +333,19 @@ module.exports = function (app, iosocket) {
                     Logger.log("Manager's progress is ", prog.progress, "%");
                 })
                 .catch( function(err){
+
                     tracker.trackEvent( iosocket, eventDB.submissionEvent(user.sessionId, user.userId, "toolError", {"msg":e}) );
+                    saveUploadErrorFiles( req.user.id, user.sessionId, uploadedFiles[0].destination, function(d,e) {
+                        Logger.log("Saving Tool Error upload files for user:", req.user.id);
+                    });
                     res.status(500).send({
-                        error: e
+                        error: err
                     });
                 });
 
+
                 manager.runJob();
+
             });
         });
     })

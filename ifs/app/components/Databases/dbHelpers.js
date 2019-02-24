@@ -76,7 +76,7 @@ module.exports = {
     },
 
     insertEventC: function (table, eventData, callback) {
-        var q = this.insert(table, eventData);
+        var q = this.insert(table, eventData)
         db.query(q, _.values(eventData), callback);
     },
 

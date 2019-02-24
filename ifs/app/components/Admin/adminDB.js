@@ -14,6 +14,10 @@ module.exports = {
         return role == "admin";
     },
 
+    isInstructor: function( role ) {
+        return role == "instructor";
+    },
+
     insertCourse: function(course, callback){
         var q = dbHelpers.buildInsert(dbcfg.class_table) + dbHelpers.buildValues(["code","name","description","disciplineType"])
         db.query(q,course,callback);

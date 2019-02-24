@@ -32,14 +32,22 @@ function getJsonTool( toolsJson, targetTool ){
 // user selected options to create jobs for the Queue
 function createJobRequests( toolFile, selectedOptions ) {
 
-    var toolList = readToolFileList(toolFile);
-    toolList.tools = removeInactiveTools(toolList.tools,selectedOptions);
+    //JSON object of all the tools available
+    var toolList = readToolFileList(toolFile)
 
-    selectedOptions = removeEnabledFormData( selectedOptions );
+    //JSON object of tools that are being used
+    toolList.tools = removeInactiveTools(toolList.tools, selectedOptions);
 
+    //Looks like it does nothing useful, may be useful later
+    // selectedOptions = removeEnabledFormData( selectedOptions );
+
+    //format the JSON object of the selected options
     var toolOptions = parseFormSelection( selectedOptions );
 
+    //adds extra params to the tool list
     var res = insertOptions(toolList.tools, toolOptions);
+
+    //create the jobRequests file with what is going to be ran
     var jobReq =  buildJobs(res, selectedOptions.files, {prefixArg: false} );
 
     return jobReq;
@@ -150,7 +158,8 @@ function removeInactiveTools(toolList, formOptions) {
 }
 
 /**
- * Removes enabled checkbox information from form data 
+ * Removes enabled checkbox information from form data
+ * Currently does nothing of use, bring to attention to group if it is needed in the future
  * @param  {[type]} formOptions [description]
  * @return {[type]}             [description]
  */
@@ -189,7 +198,7 @@ function buildJobs( fullJobs, files, options ) {
     for( var i = 0; i < filenames.length;i++)
     {
             for(var y = 0; y < jobs.length;y++)
-            {   
+            {
                 var j = _.clone( jobs[y], true );
                 j['runCmd'] += (" " + filenames[i]);
                 jobsPerFile.push(j);
@@ -215,7 +224,7 @@ function createToolProgramCall ( toolListItem, options )
     });
 
     args.push(toolListItem.fileArgs);
-    
+
     var result = _.join( args, " ");
     return result;
 }
@@ -236,7 +245,7 @@ function basicParse( toolListItem, userOptions ){
         {
             var value = "";
             if(option.type == "checkbox") {
-                value = userTargetTool.value  == "on" ? option.arg : "";
+                value = ( userTargetTool.value  == "on"  || userTargetTool.value == "true" ) ? option.arg : "";
             }
             else {
                 value = option.arg + " " + userTargetTool.value;
@@ -254,6 +263,7 @@ function basicParse( toolListItem, userOptions ){
 }
 
 
+/*
 function writeToolList( files, obj )
 {
     // Get upload directory
@@ -265,6 +275,7 @@ function writeToolList( files, obj )
     fs.writeFileSync( file , JSON.stringify(obj), 'utf-8');
     return file;
 }
+*/
 
 
 // Exports below

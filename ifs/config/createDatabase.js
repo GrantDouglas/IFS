@@ -4,11 +4,14 @@
 
 var mysql = require('mysql');
 var dbcfg = require('./databaseConfig');
+var dbConnect = require('./dbConnectionConfig.js')
 
 var Logger = require('./loggingConfig') ;
 
 try {
-    var connection = mysql.createConnection( dbcfg.connection );
+    console.log("Try connection....")
+    var connection = mysql.createConnection( dbConnect.connection );
+    console.log("Connection success.")
 
     // Tell mysql to use the database
     if(connection) {
@@ -65,7 +68,7 @@ try {
             fullSurveyFile VARCHAR(80) NOT NULL, \
             PRIMARY KEY(id) \
         )");
-        
+
         // survey results table; foreign keys in survey and users tables
         Logger.info("Create the Table:", dbcfg.survey_results_table);
         connection.query(" CREATE TABLE IF NOT EXISTS " + dbcfg.database + "." + dbcfg.survey_results_table + " ( \
@@ -87,8 +90,8 @@ try {
             id INT UNSIGNED NOT NULL AUTO_INCREMENT, \
             surveyId Int UNSIGNED NOT NULL, \
             userId INT UNSIGNED NOT NULL, \
-            surveyStartDate DATETIME DEFAULT CURRENT_TIMESTAMP, \
-            lastRevision TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
+            surveyStartDate DATETIME, \
+            lastRevision TIMESTAMP, \
             pauseAsking BOOL DEFAULT FALSE, \
             pauseTime TIME, \
             allowedToAsk BOOL DEFAULT TRUE, \
@@ -206,7 +209,7 @@ try {
             FOREIGN Key (submissionId) REFERENCES " + dbcfg.database + "." + dbcfg.submission_table + "(id), \
             FOREIGN Key (feedbackId) REFERENCES " + dbcfg.database + "." + dbcfg.feedback_table + "(id) \
         )");
-        
+
         Logger.info("Create the Table:", dbcfg.feedback_rating_table);
         connection.query(" CREATE TABLE IF NOT EXISTS " + dbcfg.database + "." + dbcfg.feedback_rating_table + " ( \
             id INT UNSIGNED NOT NULL AUTO_INCREMENT, \
@@ -274,7 +277,7 @@ try {
             name TEXT, \
             title TEXT, \
             description TEXT, \
-            deadline DATETIME DEFAULT CURRENT_TIMESTAMP , \
+            deadline DATETIME , \
             PRIMARY KEY(id), \
             FOREIGN Key (classId) REFERENCES " + dbcfg.database + "." + dbcfg.class_table + "(id) \
         )");
@@ -325,9 +328,9 @@ try {
             name TEXT, \
             title TEXT, \
             description TEXT, \
-            openDate DATETIME DEFAULT CURRENT_TIMESTAMP, \
-            closedDate DATETIME DEFAULT CURRENT_TIMESTAMP, \
-            dateCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
+            openDate DATETIME, \
+            closedDate DATETIME, \
+            dateCreated TIMESTAMP, \
             PRIMARY KEY(id), \
             FOREIGN Key (classId) REFERENCES " + dbcfg.database + "." + dbcfg.class_table + "(id) \
         )");
@@ -393,7 +396,8 @@ try {
         Logger.info("Set up roles in:", dbcfg.role_table);
         connection.query("INSERT INTO " + dbcfg.database + "." + dbcfg.role_table + "(id, role) VALUES (1, \"admin\") ON DUPLICATE KEY UPDATE id=id;");
         connection.query("INSERT INTO " + dbcfg.database + "." + dbcfg.role_table + "(id, role) VALUES (2, \"developer\") ON DUPLICATE KEY UPDATE id=id;");
-        connection.query("INSERT INTO " + dbcfg.database + "." + dbcfg.role_table + "(id, role) VALUES (3, \"student\") ON DUPLICATE KEY UPDATE id=id;");
+        connection.query("INSERT INTO " + dbcfg.database + "." + dbcfg.role_table + "(id, role) VALUES (3, \"instructor\") ON DUPLICATE KEY UPDATE id=id;");
+        connection.query("INSERT INTO " + dbcfg.database + "." + dbcfg.role_table + "(id, role) VALUES (4, \"student\") ON DUPLICATE KEY UPDATE id=id;");
 
         /* POST DATABASE CREATION: setup deletion rules for entries in the
          * verify_table; run once per hour */

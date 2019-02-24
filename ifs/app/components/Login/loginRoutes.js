@@ -10,6 +10,7 @@ var Logger = require(__configs + "loggingConfig");
 var dbcfg = require(__configs + "databaseConfig");
 var db = require(__configs + "database");
 var dbHelpers = require(__components + "Databases/dbHelpers");
+var adminDB = require(__components + "Admin/adminDB.js");
 
 var _ = require('lodash');
 
@@ -21,6 +22,15 @@ module.exports = function( app, passport ) {
 
         if(result >= 0 || (user) ) {
             if(user){
+                // Assign them the role they deserve to their session
+                adminDB.getRole( req.user.id, function (err,role){
+                    if (role && role.length > 0){
+                        if (role == "admin")
+                            _.extend(user, {admin: 1});
+                        else if(role == "instructor")
+                            _.extend(user, {instructor: 1});
+                    }
+                });
                 res.locals.user = user;
                 req.user = user;
             }
@@ -31,7 +41,7 @@ module.exports = function( app, passport ) {
         }
     }
 
-
+    // not used????
     function getEmailUsername( email ) {
 
         if( email ) {
@@ -97,7 +107,7 @@ module.exports = function( app, passport ) {
                 res.redirect('/tool');
             res.end();
         });
-    });
+});
 
     app.get('/register', function ( req,res ) {
         res.render(viewPath + 'register', {title: "Signup Screen", message:"ok"});
